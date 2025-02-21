@@ -19,7 +19,7 @@ const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
-  deprecationErrors: true,
+    deprecationErrors: true,
   }
 });
 
@@ -27,7 +27,7 @@ async function run() {
   try {
 
 
-    const userCollection = client.db("taskAppDB").collection("users");
+    const userCollection = client.db("taskManagementDB").collection("users");
 
     // Create a new user
 
@@ -37,6 +37,67 @@ async function run() {
       const users = await cursor.toArray();
       res.send(users);
     })
+
+    // Users Collection related apis
+    app.post('/users', async (req, res) => {
+      const userInfo = req.body;
+      // console.log(userInfo)
+
+      // insert email and name if user don't exist in database
+      const query = { email: userInfo.email }
+      const existingUser = await userCollection.findOne(query)
+      if (existingUser) {
+        return res.send({ message: 'user already exist', existingUser })
+      }
+      // new user data add in userCollection
+      const newUser = {
+        name: userInfo.name,
+        email: userInfo?.email,
+      }
+      const result = await userCollection.insertOne(newUser)
+      res.send(result)
+    })
+
+
+    //  add todo post
+    app.post('/addTodo', async (req, res) => {
+      const todoInfo = req.body;
+      const result = await userCollection.insertOne(todoInfo)
+      res.send(result)
+    })
+
+    // todo get
+    app.get('/todos/:email', async (req, res) => {
+      const email = req.params.email;
+      const cursor = userCollection.find({});
+      const todos = await cursor.toArray();
+      res.send(todos);
+    })
+
+    // update single todo
+    app.patch('/todos/:id', async (req, res) => {
+      const data = req.body;
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) }
+      const updateDoc = {
+        $set: {
+          title: data.title,
+          description: data.description,
+          status: data.status,
+          email: data.email
+        },
+      };
+      const result = await userCollection.updateOne(query, updateDoc)
+      res.send(result)
+    })
+
+    // delete single todo
+    app.delete('/todos/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) }
+      const result = await userCollection.deleteOne(query)
+      res.send(result)
+    }) 
 
 
   } finally {
