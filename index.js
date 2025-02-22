@@ -28,6 +28,7 @@ async function run() {
 
 
     const userCollection = client.db("taskManagementDB").collection("users");
+    const todoCollection = client.db("taskManagementDB").collection("todos");
 
     // Create a new user
 
@@ -62,14 +63,13 @@ async function run() {
     //  add todo post
     app.post('/addTodo', async (req, res) => {
       const todoInfo = req.body;
-      const result = await userCollection.insertOne(todoInfo)
+      const result = await todoCollection.insertOne(todoInfo)
       res.send(result)
     })
 
     // todo get
     app.get('/todos/:email', async (req, res) => {
-      const email = req.params.email;
-      const cursor = userCollection.find({});
+      const cursor = todoCollection.find();
       const todos = await cursor.toArray();
       res.send(todos);
     })
@@ -78,26 +78,30 @@ async function run() {
     app.patch('/todos/:id', async (req, res) => {
       const data = req.body;
       const id = req.params.id;
-      const query = { _id: ObjectId(id) }
+      console.log(data)
+      console.log("ID",id)
+      const query = { _id: new ObjectId(id) }
       const updateDoc = {
         $set: {
           title: data.title,
           description: data.description,
-          status: data.status,
-          email: data.email
+          category: data.category,
         },
       };
-      const result = await userCollection.updateOne(query, updateDoc)
+      const result = await todoCollection.updateOne(query, updateDoc)
       res.send(result)
     })
 
     // delete single todo
     app.delete('/todos/:id', async (req, res) => {
       const id = req.params.id;
-      const query = { _id: ObjectId(id) }
-      const result = await userCollection.deleteOne(query)
+      console.log(id)
+      const query = { _id: new ObjectId(id) }
+      const result = await todoCollection.deleteOne(query)
+      console.log(result
+      )
       res.send(result)
-    }) 
+    })
 
 
   } finally {
