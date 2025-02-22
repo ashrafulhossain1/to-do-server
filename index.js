@@ -68,7 +68,7 @@ async function run() {
     })
 
     // todo get
-    app.get('/todos/:email', async (req, res) => {
+    app.get('/todos', async (req, res) => {
       const cursor = todoCollection.find();
       const todos = await cursor.toArray();
       res.send(todos);
@@ -85,6 +85,21 @@ async function run() {
         $set: {
           title: data.title,
           description: data.description,
+          category: data.category,
+        },
+      };
+      const result = await todoCollection.updateOne(query, updateDoc)
+      res.send(result)
+    })
+
+    app.patch('/category/:id', async (req, res) => {
+      const data = req.body;
+      const id = req.params.id;
+      console.log(data)
+      console.log("ID",id)
+      const query = { _id: new ObjectId(id) }
+      const updateDoc = {
+        $set: {
           category: data.category,
         },
       };
